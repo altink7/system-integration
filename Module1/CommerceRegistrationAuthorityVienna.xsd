@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://technikum-wien.at/mwi/sig/commerce/commerceregistrationauthorityvienna"
+           xmlns="http://technikum-wien.at/mwi/sig/commerce/commerceregistrationauthorityvienna"
+           elementFormDefault="qualified">
+
+    <xs:element name="CommerceRegistrationAuthorityVienna">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="ApplicantName" type="xs:string"/>
+                <xs:element name="CommerceRegistration">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Profession" type="xs:string"/>
+                            <xs:element name="StartDate" type="xs:date" minOccurs="0"/>
+                            <xs:element name="Location">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="StreetName" type="xs:string"/>
+                                        <xs:element name="Number" type="xs:string"/>
+                                        <xs:element name="ZipCode" type="xs:string"/>
+                                        <xs:element name="City" type="xs:string"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

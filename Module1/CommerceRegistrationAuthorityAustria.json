@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://technikum-wien.at/mwi/sig/commerce/commerceregistrationauthorityaustria",
+  "title": "CommerceRegistrationAuthorityAustria",
+  "type": "object",
+  "properties": {
+    "CommerceRegistrationAuthorityAustria": {
+      "type": "object",
+      "properties": {
+        "ApplicantName": {
+          "type": "string"
+        },
+        "CommerceRegistration": {
+          "type": "object",
+          "properties": {
+            "Profession": {
+              "type": "string"
+            },
+            "StartDate": {
+              "type": "string",
+              "format": "date"
+            },
+            "Location": {
+              "type": "object",
+              "properties": {
+                "StreetName": {
+                  "type": "string"
+                },
+                "Number": {
+                  "type": "string"
+                },
+                "ZipCode": {
+                  "type": "string"
+                },
+                "City": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "StreetName",
+                "Number",
+                "ZipCode",
+                "City"
+              ]
+            }
+          },
+          "required": [
+            "Profession",
+            "Location"
+          ]
+        }
+      },
+      "required": [
+        "ApplicantName",
+        "CommerceRegistration"
+      ]
+    }
+  },
+  "required": [
+    "CommerceRegistrationAuthorityAustria"
+  ]
+}

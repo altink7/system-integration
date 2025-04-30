@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://technikum-wien.at/mwi/sig/commerce/commerceregistrationbatch",
+  "title": "CommerceRegistrationBatch",
+  "type": "object",
+  "properties": {
+    "ApplicantFirstName": {
+      "type": "string"
+    },
+    "ApplicantLastName": {
+      "type": "string"
+    },
+    "CommerceRegistrationDescription": {
+      "type": "string"
+    },
+    "CommerceRegistrationEffectiveDate": {
+      "type": "string"
+    },
+    "LocationStreetName": {
+      "type": "string"
+    },
+    "LocationNumber": {
+      "type": "string"
+    },
+    "LocationCity": {
+      "type": "string"
+    },
+    "LocationZipCode": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "ApplicantFirstName",
+    "ApplicantLastName",
+    "CommerceRegistrationDescription",
+    "CommerceRegistrationEffectiveDate",
+    "LocationStreetName",
+    "LocationNumber",
+    "LocationCity",
+    "LocationZipCode"
+  ]
+}

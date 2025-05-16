@@ -4,6 +4,7 @@ namespace Fibonacci.Controllers {
     [ApiController]
     [Route("[controller]")]
     public class FibonacciController : ControllerBase {
+
         [HttpGet(Name = "GetFibonacciSequence")]
         public IEnumerable<long> Index(int length) {
             List<long> sequence = [];

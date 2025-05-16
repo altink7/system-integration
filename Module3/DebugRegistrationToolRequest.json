@@ -1,0 +1,18 @@
+{
+  "CommerceRegistrationTool": {
+    "Applicant": {
+      "FirstName": "Max",
+      "LastName": "Muster"
+    },
+    "CommerceRegistration": {
+      "Description": "Gastronomiebetrieb",
+      "EffectiveDate": "2024-07-01"
+    },
+    "Location": {
+      "StreetName": "Hauptstraße",
+      "Number": "12A",
+      "ZipCode": "1010",
+      "City": "Wien"
+    }
+  }
+}

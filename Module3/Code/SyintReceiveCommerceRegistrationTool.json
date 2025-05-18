@@ -1,0 +1,159 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "When_a_HTTP_request_is_received": {
+        "type": "Request",
+        "kind": "Http",
+        "inputs": {
+          "method": "POST",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema",
+            "$id": "http://technikum-wien.at/mwi/sig/commerce/commerceregistrationtool",
+            "title": "CommerceRegistrationTool",
+            "type": "object",
+            "properties": {
+              "CommerceRegistrationTool": {
+                "type": "object",
+                "properties": {
+                  "Applicant": {
+                    "type": "object",
+                    "properties": {
+                      "FirstName": {
+                        "type": "string"
+                      },
+                      "LastName": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "FirstName",
+                      "LastName"
+                    ]
+                  },
+                  "CommerceRegistration": {
+                    "type": "object",
+                    "properties": {
+                      "Description": {
+                        "type": "string"
+                      },
+                      "EffectiveDate": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    },
+                    "required": [
+                      "Description"
+                    ]
+                  },
+                  "Location": {
+                    "type": "object",
+                    "properties": {
+                      "StreetName": {
+                        "type": "string"
+                      },
+                      "Number": {
+                        "type": "string"
+                      },
+                      "ZipCode": {
+                        "type": "string"
+                      },
+                      "City": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "StreetName",
+                      "Number",
+                      "ZipCode",
+                      "City"
+                    ]
+                  }
+                },
+                "required": [
+                  "Applicant",
+                  "CommerceRegistration",
+                  "Location"
+                ]
+              }
+            },
+            "required": [
+              "CommerceRegistrationTool"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Datei_erstellen": {
+        "runAfter": {
+          "MapExternalToInternalFormat": [
+            "Succeeded"
+          ]
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['onedriveforbusiness']['connectionId']"
+            }
+          },
+          "method": "post",
+          "body": "@outputs('MapExternalToInternalFormat')",
+          "path": "/datasets/default/files",
+          "queries": {
+            "folderPath": "/Systemintegration/CommerceRegistration/Debug\n",
+            "name": "Debug_ReceiveCommerceRegistrationTool_@{guid()}.json\n\n"
+          }
+        },
+        "runtimeConfiguration": {
+          "contentTransfer": {
+            "transferMode": "Chunked"
+          }
+        }
+      },
+      "MapExternalToInternalFormat": {
+        "runAfter": {},
+        "type": "Compose",
+        "inputs": {
+          "CommerceRegistrationInternal": {
+            "Applicant": {
+              "FirstName": "@triggerBody()?['CommerceRegistrationTool']?['Applicant']?['FirstName']",
+              "LastName": "@triggerBody()?['CommerceRegistrationTool']?['Applicant']?['LastName']"
+            },
+            "CommerceRegistration": {
+              "Description": "@triggerBody()?['CommerceRegistrationTool']?['CommerceRegistration']?['Description']",
+              "EffectiveDate": "@triggerBody()?['CommerceRegistrationTool']?['CommerceRegistration']?['EffectiveDate']"
+            },
+            "Location": {
+              "StreetName": "@triggerBody()?['CommerceRegistrationTool']?['Location']?['StreetName']",
+              "Number": "@triggerBody()?['CommerceRegistrationTool']?['Location']?['Number']",
+              "ZipCode": "@triggerBody()?['CommerceRegistrationTool']?['Location']?['ZipCode']",
+              "City": "@triggerBody()?['CommerceRegistrationTool']?['Location']?['City']"
+            }
+          }
+        }
+      }
+    },
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "type": "Object",
+        "defaultValue": {}
+      }
+    }
+  },
+  "parameters": {
+    "$connections": {
+      "type": "Object",
+      "value": {
+        "onedriveforbusiness": {
+          "id": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/providers/Microsoft.Web/locations/northcentralus/managedApis/onedriveforbusiness",
+          "connectionId": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/resourceGroups/SyintCommerceRegistration/providers/Microsoft.Web/connections/onedriveforbusiness-1",
+          "connectionName": "onedriveforbusiness-1"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "When_a_file_is_created": {
+        "recurrence": {
+          "interval": 30,
+          "frequency": "Second"
+        },
+        "evaluatedRecurrence": {
+          "interval": 30,
+          "frequency": "Second"
+        },
+        "metadata": {
+          "6e202211-2856-4d17-9ded-5beb8b8626b0": "/",
+          "b!J-1EOlAaGUK5hgdTTxXYm-gbXAn9AiRKm-Fjzb6-8hAqZcMUy8adQZsnkaomgxGr.01E4YIXDMS6TS72SCWMVC3SCOBMALHGTTP": "/Systemintegration/CommerceRegistration/CommerceRegistrationBatch"
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['onedriveforbusiness']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/datasets/default/triggers/onnewfilev2",
+          "queries": {
+            "folderId": "b!J-1EOlAaGUK5hgdTTxXYm-gbXAn9AiRKm-Fjzb6-8hAqZcMUy8adQZsnkaomgxGr.01E4YIXDMS6TS72SCWMVC3SCOBMALHGTTP",
+            "includeSubfolders": false,
+            "inferContentType": true,
+            "simulate": false
+          }
+        }
+      }
+    },
+    "actions": {
+      "SplitCSVRows": {
+        "runAfter": {},
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "csvArray",
+              "type": "array",
+              "value": "@split(replace(triggerBody(), decodeUriComponent('%0D%0A'), '\n'), '\n')"
+            }
+          ]
+        }
+      },
+      "SplitCSVColumns": {
+        "runAfter": {
+          "SplitCSVRows": [
+            "Succeeded"
+          ]
+        },
+        "type": "Select",
+        "inputs": {
+          "from": "@skip(variables('csvArray'), 1)",
+          "select": {
+            "ApplicantFirstName": "@split(item(), ';')?[0]",
+            "ApplicantLastName": "@split(item(), ';')?[1]",
+            "CommerceRegistrationDescription": "@split(item(), ';')?[2]",
+            "CommerceRegistrationEffectiveDate": "@split(item(), ';')?[3]",
+            "LocationStreetName": "@split(item(), ';')?[4]",
+            "LocationNumber": "@split(item(), ';')?[5]",
+            "LocationZipCode": "@split(item(), ';')?[6]",
+            "LocationCity": "@split(item(), ';')?[7]"
+          }
+        }
+      },
+      "CSVArrayToMessage": {
+        "runAfter": {
+          "SplitCSVColumns": [
+            "Succeeded"
+          ]
+        },
+        "type": "Compose",
+        "inputs": "@body('SplitCSVColumns')"
+      },
+      "CreateFile": {
+        "runAfter": {
+          "CSVArrayToMessage": [
+            "Succeeded"
+          ]
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['onedriveforbusiness']['connectionId']"
+            }
+          },
+          "method": "post",
+          "body": "@outputs('CSVArrayToMessage')",
+          "path": "/datasets/default/files",
+          "queries": {
+            "folderPath": "/Systemintegration/CommerceRegistration/Debug",
+            "name": "Debug_ReceiveCommerceRegistrationBatch_@{guid()}.json"
+          }
+        },
+        "runtimeConfiguration": {
+          "contentTransfer": {
+            "transferMode": "Chunked"
+          }
+        }
+      }
+    },
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "type": "Object",
+        "defaultValue": {}
+      }
+    }
+  },
+  "parameters": {
+    "$connections": {
+      "type": "Object",
+      "value": {
+        "onedriveforbusiness": {
+          "id": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/providers/Microsoft.Web/locations/northeurope/managedApis/onedriveforbusiness",
+          "connectionId": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/resourceGroups/SyintCommerceRegistration/providers/Microsoft.Web/connections/onedriveforbusiness",
+          "connectionName": "onedriveforbusiness"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "When_a_message_is_received_in_a_topic_subscription_(auto-complete)": {
+        "recurrence": {
+          "interval": 30,
+          "frequency": "Second"
+        },
+        "evaluatedRecurrence": {
+          "interval": 30,
+          "frequency": "Second"
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['servicebus']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/@{encodeURIComponent(encodeURIComponent('sendcommerceregistrationauthority'))}/subscriptions/@{encodeURIComponent('sendcommerceregistrationauthorityaustria')}/messages/head",
+          "queries": {
+            "subscriptionType": "Main"
+          }
+        }
+      }
+    },
+    "actions": {
+      "ParseMessageAsJson": {
+        "runAfter": {},
+        "type": "ParseJson",
+        "inputs": {
+          "content": "@json(base64ToString(triggerBody()?['ContentData']))",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://technikum-wien.at/mwi/sig/commerce/commerceregistrationinternal",
+            "title": "CommerceRegistrationInternal",
+            "type": "object",
+            "properties": {
+              "CommerceRegistrationInternal": {
+                "type": "object",
+                "properties": {
+                  "Applicant": {
+                    "type": "object",
+                    "properties": {
+                      "FirstName": {
+                        "type": "string"
+                      },
+                      "LastName": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "FirstName",
+                      "LastName"
+                    ]
+                  },
+                  "CommerceRegistration": {
+                    "type": "object",
+                    "properties": {
+                      "Description": {
+                        "type": "string"
+                      },
+                      "EffectiveDate": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    },
+                    "required": [
+                      "Description"
+                    ]
+                  },
+                  "Location": {
+                    "type": "object",
+                    "properties": {
+                      "StreetName": {
+                        "type": "string"
+                      },
+                      "Number": {
+                        "type": "string"
+                      },
+                      "ZipCode": {
+                        "type": "string"
+                      },
+                      "City": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "StreetName",
+                      "Number",
+                      "ZipCode",
+                      "City"
+                    ]
+                  }
+                },
+                "required": [
+                  "Applicant",
+                  "CommerceRegistration",
+                  "Location"
+                ]
+              }
+            },
+            "required": [
+              "CommerceRegistrationInternal"
+            ]
+          }
+        }
+      },
+      "MapInternalToExternalFormat": {
+        "runAfter": {
+          "ParseMessageAsJson": [
+            "Succeeded"
+          ]
+        },
+        "type": "Compose",
+        "inputs": {
+          "CommerceRegistrationInternal": {
+            "ApplicantName": "@{body('ParseMessageAsJson')['CommerceRegistrationInternal']['Applicant']['FirstName']} @{body('ParseMessageAsJson')['CommerceRegistrationInternal']['Applicant']['LastName']}",
+            "CommerceRegistration": {
+              "Profession": "@body('ParseMessageAsJson')['CommerceRegistrationInternal']['CommerceRegistration']['Description']",
+              "StartDate": "@body('ParseMessageAsJson')?['CommerceRegistrationInternal']?['CommerceRegistration']?['EffectiveDate']"
+            },
+            "Location": {
+              "StreetName": "@body('ParseMessageAsJson')['CommerceRegistrationInternal']['Location']['StreetName']",
+              "Number": "@body('ParseMessageAsJson')['CommerceRegistrationInternal']['Location']['Number']",
+              "ZipCode": "@body('ParseMessageAsJson')['CommerceRegistrationInternal']['Location']['ZipCode']",
+              "City": "@body('ParseMessageAsJson')['CommerceRegistrationInternal']['Location']['City']"
+            }
+          }
+        }
+      },
+      "Create_file": {
+        "runAfter": {
+          "MapInternalToExternalFormat": [
+            "Succeeded"
+          ]
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['onedriveforbusiness']['connectionId']"
+            }
+          },
+          "method": "post",
+          "body": "@outputs('MapInternalToExternalFormat')",
+          "path": "/datasets/default/files",
+          "queries": {
+            "folderPath": "/Systemintegration/CommerceRegistration/CommerceRegistrationAuthorityAustria",
+            "name": "Send_CommerceRegistrationAuthorityAustria_@{guid()}.json"
+          }
+        },
+        "runtimeConfiguration": {
+          "contentTransfer": {
+            "transferMode": "Chunked"
+          }
+        }
+      }
+    },
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "type": "Object",
+        "defaultValue": {}
+      }
+    }
+  },
+  "parameters": {
+    "$connections": {
+      "type": "Object",
+      "value": {
+        "servicebus": {
+          "id": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/providers/Microsoft.Web/locations/northeurope/managedApis/servicebus",
+          "connectionId": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/resourceGroups/SyintCommerceRegistration/providers/Microsoft.Web/connections/servicebus-1",
+          "connectionName": "servicebus-1"
+        },
+        "onedriveforbusiness": {
+          "id": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/providers/Microsoft.Web/locations/northeurope/managedApis/onedriveforbusiness",
+          "connectionId": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/resourceGroups/SyintCommerceRegistration/providers/Microsoft.Web/connections/onedriveforbusiness",
+          "connectionName": "onedriveforbusiness"
+        }
+      }
+    }
+  }
+}

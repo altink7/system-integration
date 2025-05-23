@@ -1,0 +1,229 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namespaces_SyintCommerceRegistrationWI24M015_name": {
+      "defaultValue": "SyintCommerceRegistrationWI24M015",
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.ServiceBus/namespaces",
+      "apiVersion": "2024-01-01",
+      "name": "[parameters('namespaces_SyintCommerceRegistrationWI24M015_name')]",
+      "location": "northeurope",
+      "sku": {
+        "name": "Standard",
+        "tier": "Standard"
+      },
+      "properties": {
+        "premiumMessagingPartitions": 0,
+        "minimumTlsVersion": "1.2",
+        "publicNetworkAccess": "Enabled",
+        "disableLocalAuth": false,
+        "zoneRedundant": true
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/authorizationrules",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/RootManageSharedAccessKey')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "rights": [
+          "Listen",
+          "Manage",
+          "Send"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/networkrulesets",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/default')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "publicNetworkAccess": "Enabled",
+        "defaultAction": "Allow",
+        "virtualNetworkRules": [],
+        "ipRules": [],
+        "trustedServiceAccessEnabled": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/receivecommerceregistrationbatch')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "maxMessageSizeInKilobytes": 256,
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/sendcommerceregistrationauthority')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "maxMessageSizeInKilobytes": 256,
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/receivecommerceregistrationbatch/receivecommerceregistrationbatchtosplit')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'receivecommerceregistrationbatch')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "isClientAffine": false,
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P10675198DT2H48M5.477S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/sendcommerceregistrationauthority/sendcommerceregistrationauthorityaustria')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'sendcommerceregistrationauthority')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "isClientAffine": false,
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P10675198DT2H48M5.477S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/sendcommerceregistrationauthority/sendcommerceregistrationauthorityvienna')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'sendcommerceregistrationauthority')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "isClientAffine": false,
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P10675198DT2H48M5.477S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/receivecommerceregistrationbatch/receivecommerceregistrationbatchtosplit/$Default')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'receivecommerceregistrationbatch', 'receivecommerceregistrationbatchtosplit')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'receivecommerceregistrationbatch')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/sendcommerceregistrationauthority/sendcommerceregistrationauthorityaustria/$Default')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'sendcommerceregistrationauthority', 'sendcommerceregistrationauthorityaustria')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'sendcommerceregistrationauthority')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2024-01-01",
+      "name": "[concat(parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), '/sendcommerceregistrationauthority/sendcommerceregistrationauthorityvienna/FilterAustria')]",
+      "location": "northeurope",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'sendcommerceregistrationauthority', 'sendcommerceregistrationauthorityvienna')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'), 'sendcommerceregistrationauthority')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('namespaces_SyintCommerceRegistrationWI24M015_name'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "sys.label != 'Wien'",
+          "compatibilityLevel": 20
+        }
+      }
+    }
+  ]
+}

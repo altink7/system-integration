@@ -1,0 +1,206 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "When_a_message_is_received_in_a_topic_subscription_(auto-complete)": {
+        "recurrence": {
+          "interval": 30,
+          "frequency": "Second"
+        },
+        "evaluatedRecurrence": {
+          "interval": 30,
+          "frequency": "Second"
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['servicebus']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/@{encodeURIComponent(encodeURIComponent('receivecommerceregistrationbatch'))}/subscriptions/@{encodeURIComponent('receivecommerceregistrationbatchtosplit')}/messages/head",
+          "queries": {
+            "subscriptionType": "Main"
+          }
+        }
+      }
+    },
+    "actions": {
+      "ParseMessageAsJsonArray": {
+        "runAfter": {},
+        "type": "ParseJson",
+        "inputs": {
+          "content": "@json(base64ToString(triggerBody()?['ContentData']))",
+          "schema": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "ForEachItemInJsonArray": {
+        "foreach": "@body('ParseMessageAsJsonArray')",
+        "actions": {
+          "ParseCurrentItemAsJson": {
+            "type": "ParseJson",
+            "inputs": {
+              "content": "@items('ForEachItemInJsonArray')",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema",
+                "$id": "http://technikum-wien.at/mwi/sig/commerce/commerceregistrationbatch",
+                "title": "CommerceRegistrationBatch",
+                "type": "object",
+                "properties": {
+                  "ApplicantFirstName": {
+                    "type": "string"
+                  },
+                  "ApplicantLastName": {
+                    "type": "string"
+                  },
+                  "CommerceRegistrationDescription": {
+                    "type": "string"
+                  },
+                  "CommerceRegistrationEffectiveDate": {
+                    "type": "string"
+                  },
+                  "LocationStreetName": {
+                    "type": "string"
+                  },
+                  "LocationNumber": {
+                    "type": "string"
+                  },
+                  "LocationCity": {
+                    "type": "string"
+                  },
+                  "LocationZipCode": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ApplicantFirstName",
+                  "ApplicantLastName",
+                  "CommerceRegistrationDescription",
+                  "CommerceRegistrationEffectiveDate",
+                  "LocationStreetName",
+                  "LocationNumber",
+                  "LocationCity",
+                  "LocationZipCode"
+                ]
+              }
+            }
+          },
+          "MapCurrentItemToInternalFormat": {
+            "runAfter": {
+              "ParseCurrentItemAsJson": [
+                "Succeeded"
+              ]
+            },
+            "type": "Compose",
+            "inputs": {
+              "CommerceRegistrationInternal": {
+                "Applicant": {
+                  "FirstName": "@body('ParseCurrentItemAsJson')['ApplicantFirstName']",
+                  "LastName": "@body('ParseCurrentItemAsJson')['ApplicantLastName']"
+                },
+                "CommerceRegistration": {
+                  "Description": "@body('ParseCurrentItemAsJson')['CommerceRegistrationDescription']",
+                  "EffectiveDate": "@body('ParseCurrentItemAsJson')['CommerceRegistrationEffectiveDate']"
+                },
+                "Location": {
+                  "StreetName": "@body('ParseCurrentItemAsJson')['LocationStreetName']",
+                  "Number": "@body('ParseCurrentItemAsJson')['LocationNumber']",
+                  "ZipCode": "@body('ParseCurrentItemAsJson')['LocationZipCode']",
+                  "City": "@body('ParseCurrentItemAsJson')['LocationCity']"
+                }
+              }
+            }
+          },
+          "Create_file": {
+            "runAfter": {
+              "MapCurrentItemToInternalFormat": [
+                "Succeeded"
+              ]
+            },
+            "type": "ApiConnection",
+            "inputs": {
+              "host": {
+                "connection": {
+                  "name": "@parameters('$connections')['onedriveforbusiness']['connectionId']"
+                }
+              },
+              "method": "post",
+              "body": "@outputs('MapCurrentItemToInternalFormat')",
+              "path": "/datasets/default/files",
+              "queries": {
+                "folderPath": "/Systemintegration/CommerceRegistration/Debug",
+                "name": " Debug_SplitCommerceRegistrationBatch_@{guid()}.json"
+              }
+            },
+            "runtimeConfiguration": {
+              "contentTransfer": {
+                "transferMode": "Chunked"
+              }
+            }
+          },
+          "Send_message": {
+            "runAfter": {
+              "MapCurrentItemToInternalFormat": [
+                "Succeeded"
+              ]
+            },
+            "type": "ApiConnection",
+            "inputs": {
+              "host": {
+                "connection": {
+                  "name": "@parameters('$connections')['servicebus']['connectionId']"
+                }
+              },
+              "method": "post",
+              "body": {
+                "Label": "@body('ParseCurrentItemAsJson')['LocationCity']",
+                "ContentData": "@base64(outputs('MapCurrentItemToInternalFormat'))"
+              },
+              "path": "/@{encodeURIComponent(encodeURIComponent('sendcommerceregistrationauthority'))}/messages",
+              "queries": {
+                "systemProperties": "None"
+              }
+            }
+          }
+        },
+        "runAfter": {
+          "ParseMessageAsJsonArray": [
+            "Succeeded"
+          ]
+        },
+        "type": "Foreach"
+      }
+    },
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "type": "Object",
+        "defaultValue": {}
+      }
+    }
+  },
+  "parameters": {
+    "$connections": {
+      "type": "Object",
+      "value": {
+        "servicebus": {
+          "id": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/providers/Microsoft.Web/locations/northeurope/managedApis/servicebus",
+          "connectionId": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/resourceGroups/SyintCommerceRegistration/providers/Microsoft.Web/connections/servicebus-1",
+          "connectionName": "servicebus-1"
+        },
+        "onedriveforbusiness": {
+          "id": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/providers/Microsoft.Web/locations/northeurope/managedApis/onedriveforbusiness",
+          "connectionId": "/subscriptions/b2af074c-bdb9-4e74-9d97-3210b1ca6364/resourceGroups/SyintCommerceRegistration/providers/Microsoft.Web/connections/onedriveforbusiness",
+          "connectionName": "onedriveforbusiness"
+        }
+      }
+    }
+  }
+}
